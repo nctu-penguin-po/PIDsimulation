@@ -1,0 +1,24 @@
+<launch>
+  
+<!--
+  <node name="dummy" pkg="pidcal" type="dummy_sensor.py">
+  </node>
+-->
+
+
+  <node name="depthPID" pkg="pidcal" type="depthPID.py">
+  </node>
+
+  <node name="balancePID" pkg="pidcal" type="balancePID.py">
+  </node>
+
+  <node name="forwardPID" pkg="pidcal" type="forwardPID.py">
+  </node>
+
+  <node name="turnPID" pkg="pidcal" type="turnPID.py">
+  </node>
+
+  <node name="sumPID" pkg="pidcal" type="sumPID.py">
+  </node>
+  
+</launch>
