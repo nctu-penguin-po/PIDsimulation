@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # license removed for brevity
 
+from static_phycal import *
 import os 
 import numpy as np
 import rospy
@@ -10,27 +11,17 @@ from std_msgs.msg import Int32MultiArray
 from rospy.numpy_msg import numpy_msg
 import time
 
-updata_flag = False
+updata_flag1 = False
+updata_flag2 = False
+updata_flag3 = False
+updata_flag4 = False
 
-pwm = []
-v16 = []
-v12 = []
 voltage = 15
 depth_data = np.zeros((1, 8))
 balance_data = np.zeros((1, 8))
 forward_data = np.zeros((1, 8))
 turn_data = np.zeros((1, 8))
 
-def read_file(filename):
-    global pwm, v16, v12
-    f = open(filename, 'r')
-    f = f.readlines()
-    for i in range(1, len(f)):
-        g = f[i].split(',')
-        pwm.append(int(g[0]))
-        v16.append(float(g[1]))
-        v12.append(float(g[2]))
-   
 def trans_value(v, ref, rel):
     if abs(v) < 0.01:
         return 1500
@@ -43,41 +34,38 @@ def trans_value(v, ref, rel):
             print(ref[i], rel[i])
             return rel[i]+(rel[i+1]-rel[i])*((v-ref[i])/(ref[i+1]-ref[i]))
 
-
 def depth_cb(data):
-    global depth_data, updata_flag
+    global depth_data, updata_flag1
     data = data.data
     for i in range(8):
         depth_data[0, i] = data[i]
     print('sum get depth')
-    updata_flag = True
+    updata_flag1 = True
 
 def balance_cb(data):
-    global balance_data, updata_flag
+    global balance_data, updata_flag2
     data = data.data
     for i in range(8):
         balance_data[0, i] = data[i]
     print('sum get balance')
-    updata_flag = True
+    updata_flag2 = True
 
 def forward_cb(data):
-    global forward_data, updata_flag
+    global forward_data, updata_flag3
     data = data.data
     for i in range(8):
         forward_data[0, i] = data[i]
     print('sum get forwad')
-    updata_flag = True
+    updata_flag3 = True
 
 def turn_cb(data):
-    global turn_data, updata_flag
+    global turn_data, updata_flag4
     data = data.data
     for i in range(8):
         turn_data[0, i] = data[i]
     print('sum get turn')
-    updata_flag = True
+    updata_flag4 = True
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-read_file(dir_path+'/thruster_force.csv')
 rospy.init_node('sumPID',anonymous=True)
 
 rospy.Subscriber('/force/depth', Float32MultiArray, depth_cb)
@@ -92,8 +80,12 @@ print(v16)
 print(v12)
 
 while not rospy.is_shutdown():
-    if updata_flag == True:
-        updata_flag = False
+    if updata_flag1 == True and updata_flag2 == True and updata_flag3 == True and updata_flag4 == True:
+        updata_flag1 = False
+        updata_flag2 = False
+        updata_flag3 = False
+        updata_flag4 = False
+
         force_data = depth_data + balance_data + forward_data + turn_data
         sum_data = list(force_data)[0]
         print(sum_data)

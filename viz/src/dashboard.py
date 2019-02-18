@@ -80,15 +80,15 @@ def voltage_cb(data):
     data = data.data
     inforLabelList[2].config(text = str(data))
     
-def button_cb(data):
+def time_cb(data):
     global inforLabelList
     data = data.data
-    inforLabelList[3].config(text = str(data))
+    inforLabelList[3].config(text = FtoS(data))
 
-pub1 = rospy.Subscriber('/depth', Float32, depth_cb)
-pub2 = rospy.Subscriber('/posture', numpy_msg(Floats), posture_cb)
-pub3 = rospy.Subscriber('/voltage', Float32, voltage_cb)
-pub4 = rospy.Subscriber('/button', Int32, button_cb)
+rospy.Subscriber('/depth', Float32, depth_cb)
+rospy.Subscriber('/posture', numpy_msg(Floats), posture_cb)
+rospy.Subscriber('/voltage', Float32, voltage_cb)
+rospy.Subscriber('/sumi_t', Float32, time_cb)
 
 forcePubList = []
 forcePubName = ['/force/depth', '/force/balance', '/force/forward', '/force/turn', '/force/sum', '/force/motor']
@@ -133,7 +133,7 @@ f2 = tk.Frame(win)
 f2.place(x = 600, y = 0, anchor = 'nw')
 
 inforLabelList = []
-topicList = ['Depth', 'Posture', 'voltage', 'button']
+topicList = ['Depth', 'Posture', 'voltage', 'sumi_t']
 heightList = [1, 3, 1, 1]
 for i in range(len(topicList)):
     l = tk.Label(f2, text = topicList[i], bg = 'black', fg = 'white', font=('Arial', 12))

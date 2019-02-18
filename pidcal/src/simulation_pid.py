@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # license removed for brevity
 
+suminame = 'test10s'
+sumi_time = 10 #sec.
+
+from static_phycal import *
 import numpy as np
 import rospy
 from std_msgs.msg import Float32
@@ -10,20 +14,6 @@ from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 import time
 import os
-
-pwm = []
-v16 = []
-v12 = []
-
-def read_file(filename):
-    global pwm, v16, v12
-    f = open(filename, 'r')
-    f = f.readlines()
-    for i in range(1, len(f)):
-        g = f[i].split(',')
-        pwm.append(int(g[0]))
-        v16.append(float(g[1]))
-        v12.append(float(g[2]))
 
 class Rigidbody3D:
   def __init__(self, m, I, t_step, init_loc = np.array([0, 0, 0]), init_v = np.array([0, 0, 0]), initrs = [np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1])], init_w = np.array([0, 0, 0])):
@@ -73,13 +63,27 @@ class Rigidbody3D:
     pitch = np.arccos(cos_pitch)*180/np.pi
     if rt[2] > rt[0]:
       pitch = -pitch
-    return row, pitch, yaw
+    return [row, pitch, yaw]
   
   def set_F(self, F):
     self.F = F
   def set_T(self, T):
     self.T = T
+  
+  def trans(self, x):
+    t = np.matrix([self.r1, self.r2, self.r3]).T
+    x = x.reshape((3, 1))
+    y = t*x
+    y = np.squeeze(np.asarray(y))
+    return y
     
+  def inv_trans(self, x):
+    t = np.matrix([self.r1, self.r2, self.r3]).T
+    x = x.reshape((3, 1))
+    y = np.linalg.inv(t)*x
+    y = np.squeeze(np.asarray(y))
+    return y
+  
   def update(self):
     self.a = self.F/self.m
     dv = self.a*self.t_step
@@ -115,47 +119,61 @@ class Rigidbody3D:
     else:
       self.r2 = np.cross(self.r3, self.r1)
 
-F = [np.array([0, 0, 0]) for i in range()]
-m = 14.14
-I=np.matrix([[0.43040321996,0.00046648212,0.00015004917],
-             [0.00046648212,0.4102308932,-0.01892857864],
-             [0.00015004917,-0.01892857864,0.13371635255]])
+F = [np.array([0, 0, 0]) for i in range(8)]
 t_stamp = 0
-t_sample = 0.01
-auv = Rigidbody3D(m, I, t_sample)
+t_sample = 0.001
+auv = Rigidbody3D(auv_m, auv_I, t_sample)
 
-r = [[419.35, 0, 126.57],
-     [-419.35, 0, 126.57],
-     [13.66, 162.85, 126.57],
-     [13.66, -162.85, 126.57],
-     [268.03, 162.85, 94.21],
-     [-268.03, 162.85, 94.21],
-     [268.03, -162.85, 94.21],
-     [-268.03, -162.85, 94.21]
-]
-CM = [20.79, 3.87, 154.89]
-motorR = []
-for i in range(len(r)):
-    t = np.array([r[i][0]-CM[0], r[i][1]-CM[1], r[i][2]-CM[2]])
-    motorR.append(t)
+now_time = time.strftime("%Y-%m-%d.%H-%M-%S", time.gmtime())
+write_f = open('/home/eric/AUVsimu/'+suminame+now_time+'.txt', 'w')
+
+while_flag = True
+
+write_head = ['loc', 'v', 'a', 'r1', 'r2', 'r3', 'w', 'alpha', 'F', 'T', 'BT']
+write_f.write('time\trow\tpitch\tyaw\t')
+for i in range(len(write_head)):
+    write_f.write(write_head[i]+'.x\t'+write_head[i]+'.y\t'+write_head[i]+'.z\t')
+for i in range(8):
+    write_f.write('F'+str(i)+'\t')
+write_f.write('\n')
+
+def write_file(t_stamp, auv, write_f, F, sum_F, sum_T, BF):
+    write_f.write(str(t_stamp)+'\t')
+    writeList = [auv.get_posture(), auv.get_loc(), auv.get_v(), auv.get_a(), auv.get_r1(), auv.get_r2(), auv.get_r3(), auv.get_w(), auv.get_alpha(), sum_F, sum_T, BF]
+    for i in range(len(writeList)):
+        ws = str(writeList[i][0])+'\t'+str(writeList[i][1])+'\t'+str(writeList[i][2])+'\t'
+        write_f.write(ws)
+    F_wl = [F[0][1], F[1][1], F[2][0], F[3][0], F[4][2], F[5][2], F[6][2], F[7][2]]
+    for i in range(len(F)):
+        ws = str(F_wl[i])+'\t'
+        write_f.write(ws)
+    write_f.write('\n')
 
 def call_update():
-    global auv, F, t_sample, t_stamp
+    global auv, F, t_sample, t_stamp, write_f, while_flag, sumi_time
+    BF = np.array([0, 0, 0])
     totalF = np.array([0, 0, 0])
     totalT = np.array([0, 0, 0])
+    totalF = totalF+BF
     for i in range(len(F)):
         totalF = totalF+F[i]
-        totalT = totalT+(np.cross(r[i], F[i]))
+        totalT = totalT+(np.cross(motorR[i], F[i]))
     auv.set_F(totalF)
     auv.set_T(totalT)
-    for i in range(10):
+    for i in range(100):
         t_stamp = t_stamp+t_sample
         auv.update()
     post = auv.get_posture()
     pos=np.array([float(post[0]),float(post[1]), float(post[2])], dtype = np.float32)
-    depth = -(auv.get_loc()[2])
+    depth = -(auv.get_loc()[2])*100
+    write_file(t_stamp, auv, write_f, F, totalF, totalT, BF)
+    if t_stamp > sumi_time:
+        while_flag = False
+        return
     pub1.publish(pos)
     pub2.publish(depth)
+    pub3.publish(t_stamp)
+    print(t_stamp)
 
 def motor_cb(data):
     global pwm, v12, v16, F
@@ -174,14 +192,23 @@ def motor_cb(data):
     F[7][2] = tF[7]
     call_update()
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-read_file(dir_path+'/thruster_force.csv')
 
 rospy.init_node('simulation',anonymous=True)
 rospy.Subscriber('/force/motor',Int32MultiArray, motor_cb)
 
 pub1 = rospy.Publisher('/posture', numpy_msg(Floats),queue_size=10)
-pub2 = rospy.Publisher('depth',Float32,queue_size=10)
-while not rospy.is_shutdown():
+pub2 = rospy.Publisher('/depth',Float32,queue_size=10)
+pub3 = rospy.Publisher('/sumi_t',Float32,queue_size=10)
+
+time.sleep(1)
+
+pos = np.array([0, 0, 0])
+depth = 0
+pub1.publish(pos)
+pub2.publish(depth)
+pub3.publish(t_stamp)
+while while_flag:
     pass
+    
+write_f.close()
 
