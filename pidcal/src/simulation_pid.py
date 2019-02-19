@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # license removed for brevity
 
-suminame = 'test10s'
+suminame = 'v1'
 sumi_time = 10 #sec.
 
 from static_phycal import *
@@ -129,7 +129,7 @@ write_f = open('/home/eric/AUVsimu/'+suminame+now_time+'.txt', 'w')
 
 while_flag = True
 
-write_head = ['loc', 'v', 'a', 'r1', 'r2', 'r3', 'w', 'alpha', 'F', 'T', 'BT']
+write_head = ['loc', 'v', 'a', 'r1', 'r2', 'r3', 'w', 'alpha', 'F', 'T', 'BT', 'BM']
 write_f.write('time\trow\tpitch\tyaw\t')
 for i in range(len(write_head)):
     write_f.write(write_head[i]+'.x\t'+write_head[i]+'.y\t'+write_head[i]+'.z\t')
@@ -137,9 +137,9 @@ for i in range(8):
     write_f.write('F'+str(i)+'\t')
 write_f.write('\n')
 
-def write_file(t_stamp, auv, write_f, F, sum_F, sum_T, BF):
+def write_file(t_stamp, auv, write_f, F, sum_F, sum_T, BF, BM):
     write_f.write(str(t_stamp)+'\t')
-    writeList = [auv.get_posture(), auv.get_loc(), auv.get_v(), auv.get_a(), auv.get_r1(), auv.get_r2(), auv.get_r3(), auv.get_w(), auv.get_alpha(), sum_F, sum_T, BF]
+    writeList = [auv.get_posture(), auv.get_loc(), auv.get_v(), auv.get_a(), auv.get_r1(), auv.get_r2(), auv.get_r3(), auv.get_w(), auv.get_alpha(), sum_F, sum_T, BF, BM]
     for i in range(len(writeList)):
         ws = str(writeList[i][0])+'\t'+str(writeList[i][1])+'\t'+str(writeList[i][2])+'\t'
         write_f.write(ws)
@@ -151,13 +151,17 @@ def write_file(t_stamp, auv, write_f, F, sum_F, sum_T, BF):
 
 def call_update():
     global auv, F, t_sample, t_stamp, write_f, while_flag, sumi_time
-    BF = np.array([0, 0, 0])
     totalF = np.array([0, 0, 0])
     totalT = np.array([0, 0, 0])
-    totalF = totalF+BF
+    GF = np.array([0, 0, -auv_m*9.81])
+    BF = np.array([0, 0, auv_BF*9.81])
+    if auv.get_loc()[2] > 0:
+        BF = BF*0
+    totalF = totalF+BF+GF
     for i in range(len(F)):
         totalF = totalF+F[i]
         totalT = totalT+(np.cross(motorR[i], F[i]))
+    totalT = totalT + np.cross(auv.inv_trans(np.array(BM)), BF)
     auv.set_F(totalF)
     auv.set_T(totalT)
     for i in range(100):
@@ -166,7 +170,7 @@ def call_update():
     post = auv.get_posture()
     pos=np.array([float(post[0]),float(post[1]), float(post[2])], dtype = np.float32)
     depth = -(auv.get_loc()[2])*100
-    write_file(t_stamp, auv, write_f, F, totalF, totalT, BF)
+    write_file(t_stamp, auv, write_f, F, totalF, totalT, BF, auv.inv_trans(np.array(BM)))
     if t_stamp > sumi_time:
         while_flag = False
         return

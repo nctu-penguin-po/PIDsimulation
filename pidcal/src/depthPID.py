@@ -17,9 +17,9 @@ def depth_cb(data):
     depth_data=data.data
     
     if depth_data < 10:
-        az = -1
+        az = -0.1
     elif depth_data > 20:
-        az = 1
+        az = 0.1
     else:
         az = 0
     #test_mat_all = np.matrix([[0], [0], [az], [0], [0], [0]])

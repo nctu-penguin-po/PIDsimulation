@@ -11,7 +11,7 @@ from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 import time
 
-kp = 0
+kp = 1
 posture_data=[0,0,0]
 
 def pos(data):
