@@ -85,10 +85,16 @@ def time_cb(data):
     data = data.data
     inforLabelList[3].config(text = FtoS(data))
 
+def state_cb(data):
+    global inforLabelList
+    data = data.data
+    inforLabelList[4].config(text = ItoS(data))
+
 rospy.Subscriber('/depth', Float32, depth_cb)
 rospy.Subscriber('/posture', numpy_msg(Floats), posture_cb)
 rospy.Subscriber('/voltage', Float32, voltage_cb)
 rospy.Subscriber('/sumi_t', Float32, time_cb)
+rospy.Subscriber('/state', Int32, state_cb)
 
 forcePubList = []
 forcePubName = ['/force/depth', '/force/balance', '/force/forward', '/force/turn', '/force/sum', '/force/motor']
@@ -133,7 +139,7 @@ f2 = tk.Frame(win)
 f2.place(x = 600, y = 0, anchor = 'nw')
 
 inforLabelList = []
-topicList = ['Depth', 'Posture', 'voltage', 'sumi_t']
+topicList = ['Depth', 'Posture', 'voltage', 'sumi_t', 'state']
 heightList = [1, 3, 1, 1]
 for i in range(len(topicList)):
     l = tk.Label(f2, text = topicList[i], bg = 'black', fg = 'white', font=('Arial', 12))

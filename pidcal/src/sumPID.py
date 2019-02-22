@@ -11,12 +11,9 @@ from std_msgs.msg import Int32MultiArray
 from rospy.numpy_msg import numpy_msg
 import time
 
-updata_flag1 = False
-updata_flag2 = False
-updata_flag3 = False
-updata_flag4 = False
+updata_flag = False
 
-voltage = 15
+voltage = 16
 depth_data = np.zeros((1, 8))
 balance_data = np.zeros((1, 8))
 forward_data = np.zeros((1, 8))
@@ -35,12 +32,12 @@ def trans_value(v, ref, rel):
             return rel[i]+(rel[i+1]-rel[i])*((v-ref[i])/(ref[i+1]-ref[i]))
 
 def depth_cb(data):
-    global depth_data, updata_flag1
+    global depth_data, updata_flag
     data = data.data
     for i in range(8):
         depth_data[0, i] = data[i]
     print('sum get depth')
-    updata_flag1 = True
+    updata_flag = True
 
 def balance_cb(data):
     global balance_data, updata_flag2
@@ -51,20 +48,20 @@ def balance_cb(data):
     updata_flag2 = True
 
 def forward_cb(data):
-    global forward_data, updata_flag3
+    global forward_data, updata_flag
     data = data.data
     for i in range(8):
         forward_data[0, i] = data[i]
     print('sum get forwad')
-    updata_flag3 = True
+    updata_flag = True
 
 def turn_cb(data):
-    global turn_data, updata_flag4
+    global turn_data, updata_flag
     data = data.data
     for i in range(8):
         turn_data[0, i] = data[i]
     print('sum get turn')
-    updata_flag4 = True
+    updata_flag = True
 
 rospy.init_node('sumPID',anonymous=True)
 
@@ -80,18 +77,26 @@ print(v16)
 print(v12)
 
 while not rospy.is_shutdown():
-    if updata_flag1 == True and updata_flag2 == True and updata_flag3 == True and updata_flag4 == True:
-        updata_flag1 = False
-        updata_flag2 = False
-        updata_flag3 = False
-        updata_flag4 = False
+    if updata_flag == True:
+        updata_flag = False
 
         force_data = depth_data + balance_data + forward_data + turn_data
         sum_data = list(force_data)[0]
+        for i in range(2, 8):
+            sum_data[i] = -sum_data[i]
         print(sum_data)
         pub_data = Float32MultiArray(data = sum_data)
         pub1.publish(pub_data)
         motor_data = []
+        for i in range(len(sum_data)):
+            v16f = trans_value(0.224809*sum_data[i], v16, pwm)
+            if v16f == 1:
+                motor_data.append(1900)
+            elif v16f == -1:
+                motor_data.append(1100)
+            else:
+                motor_data.append(int(round(rpwm, -1)))
+        '''
         for i in range(len(sum_data)):
             v16f = trans_value(0.224809*sum_data[i], v16, pwm)
             v12f = trans_value(0.224809*sum_data[i], v12, pwm)
@@ -106,6 +111,7 @@ while not rospy.is_shutdown():
             else:
                 rpwm = v12f+(v16f-v12f)*(voltage-12)/4
                 motor_data.append(int(round(rpwm, -1)))
+        '''
         pub_data = Int32MultiArray(data = motor_data)
         pub2.publish(pub_data)
 
