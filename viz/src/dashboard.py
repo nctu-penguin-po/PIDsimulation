@@ -37,7 +37,7 @@ def handle_update(data, t):
     for i in range(8):
         if abs(data[i]) < 0.5:
             b = 'white'
-        elif abs(data[i]) > 7:
+        elif abs(data[i]) > 20:
             b = 'red'
         elif data[i] > 0:
             b = 'green'
@@ -140,7 +140,7 @@ f2.place(x = 600, y = 0, anchor = 'nw')
 
 inforLabelList = []
 topicList = ['Depth', 'Posture', 'voltage', 'sumi_t', 'state']
-heightList = [1, 3, 1, 1]
+heightList = [1, 3, 1, 1, 1]
 for i in range(len(topicList)):
     l = tk.Label(f2, text = topicList[i], bg = 'black', fg = 'white', font=('Arial', 12))
     l.pack()

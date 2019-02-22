@@ -13,22 +13,22 @@ import time
 
 state_data = 0
 depth_data = 0
-depthL = [for 0 in range(10)]
+depthL = [0 for i in range(10)]
 
 Fkp = 0
 FincreaseRate = 0.5
 
 def depth_cb(data):
-    global depthL, Fkp, FincreaseRate, depth_data
+    global depthL, Fkp, FincreaseRate, depth_data, state_data
     depth_data=data.data
-    if (state%2) == 0 or state == -1:
+    if (state_data%2) == 0 or state_data == -1:
         pub_data = [0 for i in range(8)]
         pub_data = Float32MultiArray(data = pub_data)
         pub1.publish(pub_data)
         return
     
     if depth_data < 20:
-        Fkp = Fkp+FincreaseRate
+        Fkp = Fkp-FincreaseRate
     elif depth_data > 40:
         Fkp = Fkp+FincreaseRate
 

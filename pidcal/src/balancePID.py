@@ -12,6 +12,7 @@ from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 import time
 
+state_data = 0
 rowkp = 1
 rowki = 1
 pitchkp = 1
@@ -30,15 +31,18 @@ def EWMA_list_create(b, N):
     return r
 
 def pos_cb(data):
-    global posture_data, rowkp, pitchkp, rowL, pitchL, EWMAlist
+    global posture_data, rowkp, pitchkp, rowL, pitchL, EWMAlist, state_data
     posture_data=data.data
     
-    if (state & 2) == 0 or state == -1:
+    if (state_data & 2) == 0 or state_data == -1:
         pub_data = [0 for i in range(8)]
         pub_data = Float32MultiArray(data = pub_data)
         pub1.publish(pub_data)
         return
-    
+
+    row = posture_data[0]
+    pitch = posture_data[1]
+
     for i in range(len(rowL)-1, 0, -1):
         rowL[i] = rowL[i-1]
     rowL[0] = row
@@ -52,10 +56,10 @@ def pos_cb(data):
     for i in range(len(pitchL)):
         pitch_sum = pitch_sum + pitchL[i]*EWMAlist[i]
     
-    row = posture_data[0]
-    pitch = posture_data[1]
+
     #test_mat_all = np.matrix([[0], [0], [0], [-row*kp], [-pitch*kp], [0]])
-    result_F = -Talphax*(row*rowkp+row_sum*rowKi) - Talphay*(pitch*pitchkp+pitch_sum*pitchKi)
+    result_F = -Talphax*(row*rowkp+row_sum*rowki) - Talphay*(pitch*pitchkp+pitch_sum*pitchki)
+    result_F = result_F/10
     pub_data = [result_F[i] for i in range(8)]
     pub_data = Float32MultiArray(data = pub_data)
     pub1.publish(pub_data)

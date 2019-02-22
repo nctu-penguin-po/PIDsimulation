@@ -7,6 +7,7 @@ import rospy
 from std_msgs.msg import Float32
 from std_msgs.msg import Float32MultiArray 
 from std_msgs.msg import Int32
+from std_msgs.msg import Int32MultiArray
 from rospy.numpy_msg import numpy_msg
 import time
 
@@ -19,7 +20,7 @@ def turn_cb(data):
     turn=data.data
     #test_mat_all = np.matrix([[0], [0], [turn], [0], [0], [0]])
     #result_F = T_all*test_mat_all
-    if state == 0 or state == -1:
+    if state_data == 0 or state_data == -1:
         turn_direction = 0
     if turn_flag[0] > 0:
         turn_direction = 1
@@ -38,8 +39,8 @@ def state_cb(data):
 
 def turnKp_cb(data):
     global turn_kp
-	data = data.data
-	rowkp = data
+    data = data.data
+    rowkp = data
 
 def turnflag_cb(data):
     global turn_flag

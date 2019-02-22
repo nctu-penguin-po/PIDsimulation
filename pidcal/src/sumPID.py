@@ -40,12 +40,12 @@ def depth_cb(data):
     updata_flag = True
 
 def balance_cb(data):
-    global balance_data, updata_flag2
+    global balance_data, updata_flag
     data = data.data
     for i in range(8):
         balance_data[0, i] = data[i]
     print('sum get balance')
-    updata_flag2 = True
+    updata_flag = True
 
 def forward_cb(data):
     global forward_data, updata_flag
@@ -95,7 +95,7 @@ while not rospy.is_shutdown():
             elif v16f == -1:
                 motor_data.append(1100)
             else:
-                motor_data.append(int(round(rpwm, -1)))
+                motor_data.append(int(round(v16f, -1)))
         '''
         for i in range(len(sum_data)):
             v16f = trans_value(0.224809*sum_data[i], v16, pwm)

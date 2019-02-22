@@ -1,9 +1,9 @@
 <launch>
   
-<!--
+
   <node name="dummy" pkg="pidcal" type="dummy_sensor.py">
   </node>
--->
+
 
 
   <node name="depthPID" pkg="pidcal" type="depthPID.py">
