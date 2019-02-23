@@ -22,6 +22,9 @@ posture_data=[0,0,0]
 rowL = [0 for i in range(10)]
 pitchL = [0 for i in range(10)]
 
+rowK = 0
+pitchK = 0
+
 #Exponentially Weighted Moving Average
 def EWMA_list_create(b, N):
     a = (1-b)/(1-b**N)
@@ -31,7 +34,7 @@ def EWMA_list_create(b, N):
     return r
 
 def pos_cb(data):
-    global posture_data, rowkp, pitchkp, rowL, pitchL, EWMAlist, state_data
+    global posture_data, rowkp, pitchkp, rowL, pitchL, EWMAlist, state_data, rowK, pitchK
     posture_data=data.data
     
     if (state_data & 2) == 0 or state_data == -1:
@@ -55,10 +58,27 @@ def pos_cb(data):
     pitch_sum = 0
     for i in range(len(pitchL)):
         pitch_sum = pitch_sum + pitchL[i]*EWMAlist[i]
-    
-
+        
+    if row < -5:
+        rowK = rowK-rowkp*3
+    elif row > 5:
+        rowK = rowK+rowkp
+    elif row_sum < -3:
+        rowK = rowK-rowkp
+    elif row_sum > 3:
+        rowK = rowK+rowkp*0.5
+        
+    if pitch < -5:
+        pitchK = pitchK-pitchkp*3
+    elif row > 5:
+        pitchK = pitchK+pitchkp
+    elif pitch_sum < -3:
+        pitchK = pitchK-pitchkp
+    elif pitch_sum > 3:
+        pitchK = pitchK+pitchkp*0.5
     #test_mat_all = np.matrix([[0], [0], [0], [-row*kp], [-pitch*kp], [0]])
-    result_F = -Talphax*(row*rowkp+row_sum*rowki) - Talphay*(pitch*pitchkp+pitch_sum*pitchki)
+    #result_F = -Talphax*(row*rowkp+row_sum*rowki) - Talphay*(pitch*pitchkp+pitch_sum*pitchki)
+    result_F = Talphax*rowK + Talphay*pitchK
     result_F = result_F/10
     pub_data = [result_F[i] for i in range(8)]
     pub_data = Float32MultiArray(data = pub_data)
@@ -77,9 +97,11 @@ def pitchPID_cb(data):
 	pitchki = data[1]
 	
 def state_cb(data):
-    global state_data, Fkp, rowL, pitchL
+    global state_data, Fkp, rowL, pitchL, rowK, pitchK
     state_data = data.data
     if (state_data & 2) == 0:
+        rowK = 0
+        pitchK = 0
         for i in range(len(rowL)):
             rowL[i] = 0
         for i in range(len(pitchL)):

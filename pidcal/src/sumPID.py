@@ -71,7 +71,7 @@ rospy.Subscriber('/force/forward', Float32MultiArray, forward_cb)
 rospy.Subscriber('/force/turn', Float32MultiArray, turn_cb)
 
 pub1 = rospy.Publisher('/force/sum',Float32MultiArray,queue_size=10)
-pub2 = rospy.Publisher('/force/motor',Int32MultiArray,queue_size=10)
+pub2 = rospy.Publisher('/motor',Int32MultiArray,queue_size=10)
 
 print(v16)
 print(v12)

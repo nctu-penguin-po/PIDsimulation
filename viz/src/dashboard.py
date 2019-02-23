@@ -97,7 +97,7 @@ rospy.Subscriber('/sumi_t', Float32, time_cb)
 rospy.Subscriber('/state', Int32, state_cb)
 
 forcePubList = []
-forcePubName = ['/force/depth', '/force/balance', '/force/forward', '/force/turn', '/force/sum', '/force/motor']
+forcePubName = ['/force/depth', '/force/balance', '/force/forward', '/force/turn', '/force/sum', '/motor']
 forcePubClass = [Float32MultiArray, Float32MultiArray, Float32MultiArray, Float32MultiArray, Float32MultiArray, Int32MultiArray]
 forcePubFunc = [fdepth_cb, fbalance_cb, fforward_cb, fturn_cb, fsum_cb, fmotor_cb]
 
