@@ -40,10 +40,10 @@ def depth_cb(data):
         for i in range(10):
             sumt = sumt+depthL[i]
         sumt = sumt/5
-        if sumt < depthR[0]:
-            Fkp = Fkp-FincreaseRate
-        elif sumt > depthR[1]:
-            Fkp = Fkp+FincreaseRate*0.5
+        if depthR[0] < depthR[1]:
+            Fkp = Fkp+FincreaseRate
+        else:
+            Fkp = Fkp-FincreaseRate*0.5
     #test_mat_all = np.matrix([[0], [0], [az], [0], [0], [0]])
     result_F = Taz*Fkp
     pub_data = [result_F[i] for i in range(8)]
