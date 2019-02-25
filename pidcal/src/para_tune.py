@@ -18,20 +18,18 @@ def B_onclick():
     pitch_para = [float(eList[2].get()), float(eList[3].get())]
     turnKp = float(eList[4].get())
     depthKp = float(eList[5].get())
-    state = int(eList[6].get())
     pub_data = Float32MultiArray(data = row_para)
     pub1.publish(pub_data)
     pub_data = Float32MultiArray(data = pitch_para)
     pub2.publish(pub_data)
     pub3.publish(turnKp)
     pub4.publish(depthKp)
-    pub5.publish(state)
 
 win = tk.Tk()
 win.title('Dummy motor')
 
 eList = []
-text = ['rowKp', 'rowKi', 'pitchKp', 'pitchKi', 'turnKp', 'depthKp', 'state']
+text = ['rowKp', 'rowKi', 'pitchKp', 'pitchKi', 'turnKp', 'depthKp']
 for i in range(len(text)):
     L = tk.Label(win, text = text[i]).grid(row=i, column=0)
     e = tk.Entry(win)
@@ -45,7 +43,6 @@ pub1 = rospy.Publisher('/PIDpara/row',Float32MultiArray,queue_size=10)
 pub2 = rospy.Publisher('/PIDpara/pitch',Float32MultiArray,queue_size=10)
 pub3 = rospy.Publisher('/PIDpara/turn',Float32,queue_size=10)
 pub4 = rospy.Publisher('/PIDpara/depth',Float32,queue_size=10)
-pub5 = rospy.Publisher('/state',Int32,queue_size=10)
 #pub5 = rospy.Publisher('/voltage',Float32,queue_size=10)
 #pub6 = rospy.Publisher('/button',Int32,queue_size=10)
 #pub7 = rospy.Publisher('/sumi_t',Float32,queue_size=10)

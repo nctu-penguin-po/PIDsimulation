@@ -91,10 +91,14 @@ while not rospy.is_shutdown():
         for i in range(len(sum_data)):
             v16f = trans_value(0.224809*sum_data[i], v16, pwm)
             if v16f == 1:
-                motor_data.append(1900)
+                motor_data.append(1850)
             elif v16f == -1:
-                motor_data.append(1100)
+                motor_data.append(1150)
             else:
+                if v16f > 1850:
+                    v16f = 1850
+                if v16f < 1150:
+                    v16f = 1150
                 motor_data.append(int(round(v16f, -1)))
         '''
         for i in range(len(sum_data)):
