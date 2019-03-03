@@ -78,7 +78,7 @@ def pos_cb(data):
         pitchK = pitchK+pitchkp*0.5
     #test_mat_all = np.matrix([[0], [0], [0], [-row*kp], [-pitch*kp], [0]])
     #result_F = -Talphax*(row*rowkp+row_sum*rowki) - Talphay*(pitch*pitchkp+pitch_sum*pitchki)
-    result_F = Talphax*rowK + Talphay*pitchK
+    result_F = -Talphax*rowK - Talphay*pitchK
     result_F = result_F/10
     pub_data = [result_F[i] for i in range(8)]
     pub_data = Float32MultiArray(data = pub_data)

@@ -14,36 +14,39 @@ import time
 state_data = 0
 depth_data = 0
 depthL = [0 for i in range(10)]
-depthR = [0.25, 0.5]
+depthR = [0.3, 0.35, 0.6]
 
 Fkp = 0
-FincreaseRate = 0.03
+FincreaseRate = 0.05
 
 def depth_cb(data):
     global depthL, Fkp, FincreaseRate, depth_data, state_data
     depth_data=data.data
     for i in range(len(depthL)-1, 0, -1):
         depthL[i] = depthL[i-1]
-    depthL[0] = depth_data
+    depthL[0] = depth_data-depthR[1]
     if (state_data%2) == 0 or state_data == -1:
         pub_data = [0 for i in range(8)]
         pub_data = Float32MultiArray(data = pub_data)
         pub1.publish(pub_data)
         return
     
+    D = depthL[0] - depthL[2]
+    E = depth_data-depthR[1]
+    Fkp = Fkp+FincreaseRate*E+FincreaseRate*D*1
+    '''
     if depth_data < depthR[0]:
-        Fkp = Fkp-FincreaseRate*3
+        Fkp = Fkp-FincreaseRate*5
+    elif depth_data > depthR[2]:
+        Fkp = Fkp+FincreaseRate*5
     elif depth_data > depthR[1]:
         Fkp = Fkp+FincreaseRate
     else:
-        sumt = 0
-        for i in range(10):
-            sumt = sumt+depthL[i]
-        sumt = sumt/5
-        if depthR[0] < depthR[1]:
-            Fkp = Fkp+FincreaseRate
-        else:
-            Fkp = Fkp-FincreaseRate*0.5
+        if depthL[2] < depthL[0]:
+            Fkp = Fkp+FincreaseRate*3
+        elif depthL[2] > depthL[0]:
+            Fkp = Fkp-FincreaseRate*10
+    '''
     #test_mat_all = np.matrix([[0], [0], [az], [0], [0], [0]])
     result_F = Taz*Fkp
     pub_data = [result_F[i] for i in range(8)]
@@ -55,10 +58,16 @@ def Kp_cb(data):
     FincreaseRate = data.data
     
 def state_cb(data):
-    global state_data, Fkp
+    global state_data, Fkp, init_K
     state_data = data.data
     if (state_data%2) == 0:
         Fkp = 0
+    if (state_data%2) == 1:
+        Fkp = init_K
+
+init_lbf = 12.34*4.44482
+sum = Taz[4]+Taz[5]+Taz[6]+Taz[7]
+init_K = -init_lbf/sum
 
 rospy.init_node('depthPID',anonymous=True)
 
